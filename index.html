@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Raven's Roles</title>
+  <!-- Google Fonts: Roboto -->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500&display=swap" rel="stylesheet">
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <!-- Leaflet.draw CSS -->
@@ -11,13 +14,15 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
   <style>
-    /* Remove scrollbar for the entire page */
+    /* Use Roboto for the entire page with font smoothing */
     html, body {
+      font-family: 'Roboto', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
       height: 100%;
       margin: 0;
       padding: 0;
       overflow: hidden;
-      font-family: Arial, sans-serif;
       background-color: #2c2c2c;
       color: #ddd;
     }
@@ -68,7 +73,7 @@
       display: flex;
       flex-direction: column;
     }
-    /* Sticky Filters & Header Area */
+    /* Sticky Filters & Desktop Table Header */
     #stickyFilters {
       background-color: #2c2c2c;
       padding: 10px;
@@ -77,18 +82,13 @@
       top: 0;
       z-index: 10;
     }
-    #infoRow {
-      text-align: center;
-      font-size: 12px;
-      color: #fff;
-      margin-bottom: 5px;
-    }
+    /* Filter Controls */
     #filterRow {
       display: flex;
+      flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 10px; /* separates filters from header */
+      margin-bottom: 10px;
     }
-    /* Filter controls for state, section, salary & checkbox */
     #filterRow select {
       padding: 8px;
       font-size: 14px;
@@ -97,15 +97,16 @@
       border-radius: 4px;
       flex: 1;
       color: #fff;
+      min-width: 120px;
     }
     #filterRow label {
-      display: inline-flex;
+      display: flex;
       align-items: center;
       gap: 5px;
       color: #fff;
       font-size: 14px;
     }
-    /* Table Header styling (separate table) */
+    /* Desktop Table Header */
     #jobsTableHeader {
       width: 100%;
       border-collapse: collapse;
@@ -117,24 +118,18 @@
       color: #ddd;
       padding: 12px;
       border-bottom: 1px solid #444;
-      text-align: left;
+      text-align: center;
       font-size: 14px;
     }
-    /* Align column 4 (Pay) right and column 5 (Job Link) center in the header */
-    #jobsTableHeader th:nth-child(4) {
-      text-align: right;
-    }
-    #jobsTableHeader th:nth-child(5) {
-      text-align: center;
-    }
-    /* Scrollable Table Container for table body */
+    /* Scrollable Table Container */
     #tableContainer {
       flex: 1;
-      overflow-y: scroll;
+      overflow-y: auto;
+      overflow-x: auto;
       padding: 10px;
       box-sizing: border-box;
     }
-    /* Custom scrollbar styles for WebKit */
+    /* Custom scrollbar styles */
     #tableContainer::-webkit-scrollbar {
       width: 8px;
     }
@@ -145,12 +140,11 @@
       background-color: #888;
       border-radius: 4px;
     }
-    /* Firefox scrollbar styling */
     #tableContainer {
       scrollbar-width: thin;
       scrollbar-color: #888 #444;
     }
-    /* Table body styling */
+    /* Desktop Table Body Styling */
     #jobsTable {
       width: 100%;
       border-collapse: collapse;
@@ -160,35 +154,98 @@
     #jobsTable td {
       padding: 12px;
       border-bottom: 1px solid #444;
-      text-align: left;
+      text-align: center;
       font-size: 12px;
       color: #ddd;
       word-wrap: break-word;
-    }
-    /* Align column 4 (Pay) right and column 5 (Job Link) center in the body */
-    #jobsTable td:nth-child(4) {
-      text-align: right;
-    }
-    #jobsTable td:nth-child(5) {
-      text-align: center;
     }
     #jobsTable tr:nth-child(even) {
       background-color: #2a2a2a;
     }
     #jobsTable tr:hover {
       background-color: #3a3a3a;
+      cursor: pointer;
     }
-    /* Hyperlink Styling */
-    #jobsTable a {
-      color: #007bff;
+    /* Hyperlink color override */
+    #jobsTable a, #infoRow a {
+      color: #ffa500;
       text-decoration: none;
     }
-    #jobsTable a:hover {
+    #jobsTable a:hover, #infoRow a:hover {
       text-decoration: underline;
     }
-    /* Override cluster marker text color to black */
+    /* Info Row at Bottom - centered */
+    #infoRow {
+      width: 100%;
+      text-align: center;
+      margin: 0 auto;
+      background-color: #2c2c2c;
+      padding: 10px;
+      font-size: 12px;
+      color: #fff;
+      border-top: 1px solid #444;
+    }
+    /* Cluster marker text color override */
     .marker-cluster div {
       color: black !important;
+    }
+    /* Mobile Responsive Adjustments */
+    @media (max-width: 768px) {
+      /* Adjust container heights */
+      #map {
+        height: 50%;
+      }
+      #tableSection {
+        height: 50%;
+      }
+      /* Increase button size */
+      .custom-btn {
+        padding: 10px 16px;
+        font-size: 16px;
+      }
+      /* Full-width filter controls */
+      #filterRow {
+        flex-direction: column;
+      }
+      #filterRow select, #filterRow label {
+        font-size: 16px;
+        width: 100%;
+      }
+      /* Hide desktop table header on mobile */
+      #jobsTableHeader {
+        display: none;
+      }
+      /* Transform table into a flex container of cards */
+      #jobsTable {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      #jobsTable tbody {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      /* Each row becomes a card */
+      #jobsTable tr {
+        flex: 1 1 300px; /* Minimum width of 300px */
+        border: 1px solid #555;
+        padding: 10px;
+        box-sizing: border-box;
+        background-color: #222;
+        margin: 0;
+      }
+      /* Each cell becomes block and is centered */
+      #jobsTable td {
+        display: block;
+        margin-bottom: 4px;
+        text-align: center;
+        white-space: normal;
+        font-size: 14px;
+      }
+      #jobsTable td:last-child {
+        margin-bottom: 0;
+      }
     }
   </style>
 </head>
@@ -198,7 +255,7 @@
     <div class="button-container">
       <div class="top-buttons">
         <button id="drawMapBtn" class="custom-btn">Draw Map Filter</button>
-        <button id="clearFiltersBtn" class="custom-btn clear-btn">Clear Map Filters</button>
+        <button id="clearFiltersBtn" class="custom-btn clear-btn">Clear All Filters</button>
       </div>
       <div class="draw-buttons">
         <button id="drawPolygon" class="custom-btn">Polygon</button>
@@ -209,13 +266,8 @@
   
   <!-- Table Section -->
   <div id="tableSection">
-    <!-- Sticky Filters Area: Info, Filter Controls, and Table Header -->
+    <!-- Sticky Filters & Desktop Table Header -->
     <div id="stickyFilters">
-      <div id="infoRow">
-  Raven's Roles |
-  <a href="mailto:ravensroles@gmail.com" style="color:#ffae00; text-decoration: underline; margin: 0 5px;">Contact Us</a> 
-  | Jobs updated 3/17/2025
-</div>
       <div id="filterRow">
         <select id="stateFilter">
           <option value="">All States</option>
@@ -230,14 +282,12 @@
           <input type="checkbox" id="includeNoPay" checked /> Include No Pay Data
         </label>
       </div>
-      <!-- Table Header placed below filters -->
       <table id="jobsTableHeader">
         <colgroup>
-          <col style="width:20%;">
-          <col style="width:20%;">
-          <col style="width:30%;">
-          <col style="width:15%;">
-          <col style="width:15%;">
+          <col style="width:25%;">
+          <col style="width:25%;">
+          <col style="width:25%;">
+          <col style="width:25%;">
         </colgroup>
         <thead>
           <tr>
@@ -245,23 +295,25 @@
             <th>Agency</th>
             <th>Location</th>
             <th>Pay</th>
-            <th>Job Link</th>
           </tr>
         </thead>
       </table>
     </div>
-    <!-- Scrollable Table Container with only table body -->
+    <!-- Scrollable Table Container -->
     <div id="tableContainer">
       <table id="jobsTable">
         <colgroup>
-          <col style="width:20%;">
-          <col style="width:20%;">
-          <col style="width:30%;">
-          <col style="width:15%;">
-          <col style="width:15%;">
+          <col style="width:25%;">
+          <col style="width:25%;">
+          <col style="width:25%;">
+          <col style="width:25%;">
         </colgroup>
         <tbody></tbody>
       </table>
+    </div>
+    <!-- Info Row at Bottom -->
+    <div id="infoRow">
+      Raven's Roles | <a href="mailto:ravensroles@gmail.com">Contact Us</a> | Jobs updated 3/17/2025
     </div>
   </div>
   
@@ -282,10 +334,10 @@
       "GIS": "red",
       "Natural Resources": "orange"
     };
-    
+
     // Cache marker icons.
     const sectionIconMapping = {};
-    
+
     // Function to return an icon based on job section.
     function getIconForSection(section) {
       let color = sectionColorMapping[section] || "blue";
@@ -301,37 +353,36 @@
       sectionIconMapping[section] = icon;
       return icon;
     }
-    
+
     // Basemap layers
-    var natGeoWorldMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}', {
+    var natGeoWorldMap = L.tileLayer('https://server.arcgis.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}', {
       attribution: '© Esri'
     });
     var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     });
-    var arcgisTopographic = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+    var arcgisTopographic = L.tileLayer('https://server.arcgis.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
       attribution: '© Esri'
     });
-    var arcgisImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    var arcgisImagery = L.tileLayer('https://server.arcgis.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
       attribution: '© Esri'
     });
 
-    
     var baseMaps = {
       "OpenStreetMap": osm,
       "ArcGIS Topographic": arcgisTopographic,
       "ArcGIS World Imagery": arcgisImagery,
       "NatGeo World Map": natGeoWorldMap
     };
-    
-    // Initialize the map with default layer (Stadia Terrain)
+
+    // Initialize the map with default layer
     const map = L.map('map', {
       center: [39.8283, -98.5795],
       zoom: 4,
       layers: [osm]
     });
     L.control.layers(baseMaps, {}, { position: 'bottomright' }).addTo(map);
-    
+
     // Enable drawing tools
     const drawnItems = new L.FeatureGroup().addTo(map);
     map.addControl(new L.Control.Draw({
@@ -345,12 +396,12 @@
         circlemarker: false
       }
     }));
-    
+
     let allJobs = [];
     let markerClusterGroup = L.markerClusterGroup();
     map.addLayer(markerClusterGroup);
     let currentShapeLayer = null;
-    
+
     Papa.parse('jobs_geocoded_with_links.csv', {
       download: true,
       header: true,
@@ -393,22 +444,21 @@
         console.error('CSV Load Error:', err);
       }
     });
-    
+
     function populateTable(data) {
       const tbody = document.querySelector('#jobsTable tbody');
       tbody.innerHTML = '';
       data.forEach(job => {
         tbody.innerHTML += `
-          <tr>
-            <td>${job['Job Title'] || ''}</td>
-            <td>${job.Agency || ''}</td>
-            <td>${job.Location || ''}</td>
-            <td>${job.Pay || ''}</td>
-            <td><a href="${job['Job Link']}" target="_blank">Link</a></td>
+          <tr onclick="window.open('${job['Job Link']}', '_blank')">
+            <td data-label="Job Title">${job['Job Title'] || ''}</td>
+            <td data-label="Agency">${job.Agency || ''}</td>
+            <td data-label="Location">${job.Location || ''}</td>
+            <td data-label="Pay">${job.Pay || ''}</td>
           </tr>`;
       });
     }
-    
+
     function updateMarkers(data) {
       markerClusterGroup.clearLayers();
       data.forEach(job => {
@@ -418,13 +468,13 @@
           const marker = L.marker([lat, lng], { icon: icon }).bindPopup(`
             <strong>${job['Job Title'] || ''}</strong><br>
             ${job.Agency || ''}<br>
-            <a href="${job['Job Link']}" target="_blank">Job Link</a>
+            ${job.Pay || ''}
           `);
           markerClusterGroup.addLayer(marker);
         }
       });
     }
-    
+
     function pointInPolygon(point, vs) {
       const x = point.lng, y = point.lat;
       let inside = false;
@@ -437,18 +487,18 @@
       }
       return inside;
     }
-    
+
     function getPolygonPoints(polygon) {
       let latlngs = polygon.getLatLngs();
       return Array.isArray(latlngs[0]) ? latlngs[0] : latlngs;
     }
-    
+
     function filterData() {
       const stateVal = $('#stateFilter').val();
       const sectionVal = $('#sectionFilter').val();
       const salaryVal = $('#salaryFilter').val();
       const includeNoPay = $('#includeNoPay').is(':checked');
-      
+
       let filtered = allJobs.filter(job => {
         const matchesState = !stateVal || (job.parsedState === stateVal);
         const matchesSection = !sectionVal || (job.Section === sectionVal);
@@ -464,7 +514,7 @@
         }
         return matchesState && matchesSection && matchesSalary;
       });
-      
+
       if (currentShapeLayer) {
         let polyPoints = getPolygonPoints(currentShapeLayer);
         filtered = filtered.filter(job => {
@@ -475,9 +525,9 @@
       populateTable(filtered);
       updateMarkers(filtered);
     }
-    
+
     $('#stateFilter, #sectionFilter, #salaryFilter, #includeNoPay').on('change', filterData);
-    
+
     map.on(L.Draw.Event.CREATED, (e) => {
       drawnItems.clearLayers();
       currentShapeLayer = e.layer;
@@ -489,7 +539,7 @@
       currentShapeLayer = null;
       filterData();
     });
-    
+
     document.getElementById('drawMapBtn').addEventListener('click', function(){
       var drawButtonsDiv = document.querySelector('.draw-buttons');
       drawButtonsDiv.style.display = (drawButtonsDiv.style.display === 'none' || drawButtonsDiv.style.display === '')

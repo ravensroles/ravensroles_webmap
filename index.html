@@ -36,17 +36,23 @@
     .button-container {
       position: absolute;
       top: 20px;
-      right: 20px;
+      left: 50%;
+      transform: translateX(-50%);
       z-index: 1000;
+      width: auto;
     }
     .top-buttons {
       display: flex;
       gap: 10px;
     }
+    /* Draw buttons remain hidden on initial load */
     .draw-buttons {
-      display: none;
+      display: none; /* Remains hidden until toggled */
       margin-top: 5px;
+      gap: 10px;
+      justify-content: center;
     }
+    /* Force button text to remain on one line and add active state styling */
     .custom-btn {
       background-color: #007BFF;
       color: #fff;
@@ -56,6 +62,7 @@
       font-size: 14px;
       cursor: pointer;
       transition: background-color 0.3s;
+      white-space: nowrap;
     }
     .custom-btn:hover {
       background-color: #0056b3;
@@ -65,6 +72,10 @@
     }
     .clear-btn:hover {
       background-color: #c82333;
+    }
+    /* Active button style */
+    .custom-btn.active {
+      background-color: #28a745 !important;
     }
     /* Table Section */
     #tableSection {
@@ -198,18 +209,29 @@
       #tableSection {
         height: 50%;
       }
-      /* Increase button size */
+      /* Reduce mobile button font and padding */
       .custom-btn {
-        padding: 10px 16px;
-        font-size: 16px;
+        padding: 8px 12px;
+        font-size: 14px;
+        border-radius: 16px;
       }
-      /* Full-width filter controls */
+      /* Keep the top buttons side-by-side */
+      .top-buttons {
+        flex-direction: row;
+        gap: 8px;
+      }
+      /* Ensure draw buttons container is directly under top buttons */
+      .draw-buttons {
+        margin-top: 8px;
+        gap: 8px;
+      }
+      /* Place all dropdown filters in one row */
       #filterRow {
-        flex-direction: column;
+        flex-direction: row;
       }
       #filterRow select, #filterRow label {
         font-size: 16px;
-        width: 100%;
+        width: auto;
       }
       /* Hide desktop table header on mobile */
       #jobsTableHeader {
@@ -226,14 +248,20 @@
         flex-wrap: wrap;
         gap: 10px;
       }
-      /* Each row becomes a card */
+      /* Each row becomes a card with uniform background, subtle border and shadow */
       #jobsTable tr {
-        flex: 1 1 300px; /* Minimum width of 300px */
-        border: 1px solid #555;
+        flex: 1 1 300px;
+        border: 1px solid #444;
+        border-radius: 8px;
         padding: 10px;
         box-sizing: border-box;
         background-color: #222;
-        margin: 0;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      }
+      /* Remove alternating background override */
+      #jobsTable tr:nth-child(even) {
+        background-color: #222 !important;
       }
       /* Each cell becomes block and is centered */
       #jobsTable td {
@@ -276,7 +304,7 @@
           <option value="">All Sections</option>
         </select>
         <select id="salaryFilter">
-          <option value="">Minimum Salary</option>
+          <option value="">Min. Salary</option>
         </select>
         <label>
           <input type="checkbox" id="includeNoPay" checked /> Include No Pay Data
@@ -375,34 +403,26 @@
       "NatGeo World Map": natGeoWorldMap
     };
 
-    // Initialize the map with default layer
+    // Initialize the map with default layer and adjust zoom control position.
     const map = L.map('map', {
       center: [39.8283, -98.5795],
       zoom: 4,
-      layers: [osm]
+      layers: [osm],
+      zoomControl: true
     });
+    map.zoomControl.setPosition('bottomleft');
     L.control.layers(baseMaps, {}, { position: 'bottomright' }).addTo(map);
 
-    // Enable drawing tools
+    // Create a FeatureGroup to store drawn items (used by custom drawing buttons)
     const drawnItems = new L.FeatureGroup().addTo(map);
-    map.addControl(new L.Control.Draw({
-      edit: { featureGroup: drawnItems },
-      draw: {
-        polygon: true,
-        rectangle: true,
-        circle: false,
-        marker: false,
-        polyline: false,
-        circlemarker: false
-      }
-    }));
+    // Note: The default Leaflet.draw control UI is not added
 
     let allJobs = [];
     let markerClusterGroup = L.markerClusterGroup();
     map.addLayer(markerClusterGroup);
     let currentShapeLayer = null;
 
-    Papa.parse('jobs_geocoded_with_links.csv', {
+    Papa.parse('jobs_found_03-17-2025.csv', {
       download: true,
       header: true,
       complete: function(results) {
@@ -427,9 +447,9 @@
         [...sectionSet].sort().forEach(sec => {
           $('#sectionFilter').append(`<option value="${sec}">${sec}</option>`);
         });
-        // Populate salary filter with fixed increments up to 120,000
+        // Populate salary filter with fixed increments up to 120,000, using "Min. Salary" label
         let increment = 10000;
-        $('#salaryFilter').empty().append(`<option value="">Minimum Salary</option>`);
+        $('#salaryFilter').empty().append(`<option value="">Min. Salary</option>`);
         for (let i = increment; i <= 120000; i += increment) {
           if (i < 120000) {
             $('#salaryFilter').append(`<option value="${i}">$${i.toLocaleString()}</option>`);
@@ -459,22 +479,23 @@
       });
     }
 
-    function updateMarkers(data) {
-      markerClusterGroup.clearLayers();
-      data.forEach(job => {
-        const lat = parseFloat(job.latitude), lng = parseFloat(job.longitude);
-        if (!isNaN(lat) && !isNaN(lng)) {
-          const icon = getIconForSection(job.Section || 'default');
-          const marker = L.marker([lat, lng], { icon: icon }).bindPopup(`
-            <strong>${job['Job Title'] || ''}</strong><br>
-            ${job.Agency || ''}<br>
-            ${job.Pay || ''}
-          `);
-          markerClusterGroup.addLayer(marker);
-        }
-      });
-    }
 
+    function updateMarkers(data) {
+    markerClusterGroup.clearLayers();
+    data.forEach(job => {
+      const lat = parseFloat(job.latitude), lng = parseFloat(job.longitude);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        const icon = getIconForSection(job.Section || 'default');
+        const marker = L.marker([lat, lng], { icon: icon }).bindPopup(`
+          <strong>${job['Job Title'] || ''}</strong><br>
+          ${job.Agency || ''}<br>
+          ${job.Pay || ''}<br>
+          <a href="${job['Job Link']}" target="_blank">View Job</a>
+        `);
+        markerClusterGroup.addLayer(marker);
+      }
+    });
+  }
     function pointInPolygon(point, vs) {
       const x = point.lng, y = point.lat;
       let inside = false;
@@ -528,11 +549,17 @@
 
     $('#stateFilter, #sectionFilter, #salaryFilter, #includeNoPay').on('change', filterData);
 
+    // Listen for drawing events triggered by our custom buttons
     map.on(L.Draw.Event.CREATED, (e) => {
       drawnItems.clearLayers();
       currentShapeLayer = e.layer;
       drawnItems.addLayer(currentShapeLayer);
       filterData();
+      // Hide draw buttons after shape is completed
+      document.querySelector('.draw-buttons').style.display = 'none';
+      // Clear active state from draw buttons
+      document.getElementById('drawPolygon').classList.remove('active');
+      document.getElementById('drawSquare').classList.remove('active');
     });
     map.on(L.Draw.Event.DELETED, () => {
       drawnItems.clearLayers();
@@ -540,17 +567,25 @@
       filterData();
     });
 
+    // Toggle draw-buttons visibility when user clicks "Draw Map Filter"
     document.getElementById('drawMapBtn').addEventListener('click', function(){
       var drawButtonsDiv = document.querySelector('.draw-buttons');
       drawButtonsDiv.style.display = (drawButtonsDiv.style.display === 'none' || drawButtonsDiv.style.display === '')
-                                     ? 'block'
+                                     ? 'flex'
                                      : 'none';
+      // Clear active states
+      document.getElementById('drawPolygon').classList.remove('active');
+      document.getElementById('drawSquare').classList.remove('active');
     });
     document.getElementById('drawPolygon').addEventListener('click', function(){
       new L.Draw.Polygon(map, { showArea: true }).enable();
+      this.classList.add('active');
+      document.getElementById('drawSquare').classList.remove('active');
     });
     document.getElementById('drawSquare').addEventListener('click', function(){
       new L.Draw.Rectangle(map, {}).enable();
+      this.classList.add('active');
+      document.getElementById('drawPolygon').classList.remove('active');
     });
     document.getElementById('clearFiltersBtn').addEventListener('click', function(){
       drawnItems.clearLayers();
@@ -560,6 +595,9 @@
       $('#salaryFilter').val('');
       $('#includeNoPay').prop('checked', true);
       filterData();
+      // Clear active state from draw buttons
+      document.getElementById('drawPolygon').classList.remove('active');
+      document.getElementById('drawSquare').classList.remove('active');
     });
   </script>
 </body>
